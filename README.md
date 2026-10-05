@@ -1,106 +1,86 @@
 # YouTube Segment Downloader
 
-Modern PySide6 desktop application for downloading either a full YouTube video or only a selected time range.
+**YouTube Segment Downloader is a desktop app (Python, PySide6) for downloading either a whole YouTube
+video or only a chosen time range of it — as video with audio, video only, or audio only (MP3 or
+M4A).** You paste a link, see the video's details, set the start and end with a two-handle slider, and
+download just that part. It uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to fetch the video and
+[ffmpeg](https://ffmpeg.org) for exact trimming and audio conversion. It was built by
+[Eren Can Almaz](https://writerforight.github.io), an Electrical Engineering student at RWTH Aachen
+University.
 
 ## Features
 
-- Modern dark desktop UI
-- Fetch video title, duration, uploader, resolution and thumbnail
-- Dual-handle trim slider
-- Time entry fields synchronized with the slider
-- Download modes:
-  - Video + audio
-  - Video only
-  - Audio only
-- Audio output options: MP3 or M4A
-- Output folder picker
-- Progress bar, percentage, speed, ETA and status text
-- Background worker thread so the GUI stays responsive
-- Cancel support
-- ffmpeg validation
-- Safe filename sanitization and duplicate filename handling
+- Fetches the title, duration, uploader, resolution and thumbnail of a video.
+- **Trim before saving**: a dual-handle range slider, synchronized with start/end time fields, and the
+  length of the selection.
+- Download modes: **video + audio**, **video only**, **audio only** (MP3 or M4A).
+- Progress bar with percentage, speed, ETA and status; downloads run in a background thread, so the
+  window stays responsive, and can be cancelled.
+- Checks that ffmpeg is installed, makes file names safe and never overwrites an existing file.
+- Dark interface; output folder picker.
 
-## Project Structure
+## How it works
 
-```text
-youtube_segment_downloader/
-├── main.py
-├── requirements.txt
-├── README.md
-└── src/
-    ├── __init__.py
-    ├── core/
-    │   ├── __init__.py
-    │   ├── download_worker.py
-    │   ├── ffmpeg_utils.py
-    │   ├── models.py
-    │   ├── utils.py
-    │   └── youtube_service.py
-    └── ui/
-        ├── __init__.py
-        ├── main_window.py
-        └── range_slider.py
-```
+1. `yt-dlp` reads the video metadata (`src/core/youtube_service.py`).
+2. A worker thread downloads the best matching stream(s) into a temporary folder
+   (`src/core/download_worker.py`); for *video + audio* yt-dlp merges the streams.
+3. If a time range is selected, `ffmpeg` cuts exactly that range; for *audio only* it then converts the
+   result to MP3 or M4A (`src/core/ffmpeg_utils.py`).
+4. The file is moved to the chosen folder under a sanitized, non-conflicting name.
 
-## Installation
+## Requirements
 
-### 1) Create and activate a virtual environment
+- Python 3.10+
+- [ffmpeg](https://ffmpeg.org/download.html) with `ffmpeg` and `ffprobe` on your `PATH`
+  (check with `ffmpeg -version`)
+- Python packages: `PySide6`, `yt-dlp` (see `requirements.txt`)
 
-### Windows PowerShell
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-### Windows CMD
-
-```cmd
-python -m venv .venv
-.venv\Scripts\activate.bat
-```
-
-## 2) Install Python dependencies
+## Install and run
 
 ```bash
+python -m venv .venv
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1     Windows CMD: .venv\Scripts\activate.bat
+# macOS / Linux:      source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-## 3) Install ffmpeg
-
-Install ffmpeg and make sure both `ffmpeg` and `ffprobe` are available in PATH.
-
-You can verify with:
-
-```bash
-ffmpeg -version
-ffprobe -version
-```
-
-## Run
-
-```bash
 python main.py
 ```
 
-## Build EXE with PyInstaller
+Keep `yt-dlp` up to date (`pip install -U yt-dlp`); YouTube changes often and old versions stop working.
 
-Install PyInstaller:
+## Build a Windows executable
 
 ```bash
 pip install pyinstaller
+pyinstaller --noconfirm --windowed --name "YouTube Segment Downloader" --collect-all PySide6 \
+  --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets main.py
 ```
 
-Then build:
+## Project structure
 
-```bash
-pyinstaller --noconfirm --windowed --name "YouTube Segment Downloader" --collect-all PySide6 --hidden-import=PySide6.QtCore --hidden-import=PySide6.QtGui --hidden-import=PySide6.QtWidgets main.py
+```text
+main.py                     entry point
+src/core/youtube_service.py metadata via yt-dlp
+src/core/download_worker.py background download + trimming
+src/core/ffmpeg_utils.py    ffmpeg checks, trimming, audio conversion
+src/core/models.py          download options
+src/core/utils.py           time formatting, safe file names
+src/ui/main_window.py       the window
+src/ui/range_slider.py      two-handle range slider widget
 ```
 
-## Notes
+## Responsible use
 
-- The app uses `yt-dlp` for metadata and downloads.
-- The app uses `ffmpeg` for exact trimming and audio conversion.
-- For `audio only`, the app downloads best available audio, optionally trims it, then converts it to the selected audio format.
-- For `video only`, the app downloads the best video stream available.
-- For `video + audio`, yt-dlp merges streams and the app can trim the merged output.
+Only download videos you have the right to download, and respect YouTube's Terms of Service and the
+creators' copyright.
+
+## Author
+
+**Eren Can Almaz** — Electrical Engineering (Elektrotechnik) student at RWTH Aachen University.
+GitHub [@writerforight](https://github.com/writerforight) · website
+[writerforight.github.io](https://writerforight.github.io). Other projects:
+[Neural Space Deformation](https://github.com/writerforight/mlp-space-deformation) ·
+[Ders Transkript](https://github.com/writerforight/ders-transkript).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
