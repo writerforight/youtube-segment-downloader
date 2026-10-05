@@ -8,6 +8,8 @@ download just that part. It uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to f
 [Eren Can Almaz](https://writerforight.github.io), an Electrical Engineering student at RWTH Aachen
 University.
 
+![YouTube Segment Downloader: link field, video details, trim slider, download mode and progress](docs/screenshot.png)
+
 ## Features
 
 - Fetches the title, duration, uploader, resolution and thumbnail of a video.
